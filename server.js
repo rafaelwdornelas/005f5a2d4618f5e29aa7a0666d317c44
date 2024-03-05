@@ -148,17 +148,14 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
     const toAddress = to.shift()
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
     const htmlnew = await editehtml(html)
+    const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
     let message = {
         encoding: "base64",
         from:
         "=?UTF-8?B?" +
         Buffer.alloc(name.length, name).toString("base64") +
         "?=" +
-        " <" +
-        fromUser +
-        randomstring.generate(between(3, 5)) +
-        "@" +
-        serverName +
+        " <" + fromx +
         ">",
       to: { name: fromName, address: toAddress },
         bcc: to,
@@ -176,7 +173,14 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
           comment: "Unsubscribe"
         }],
       },
-      text: convert(html, { wordwrap: 85 })
+      text: convert(html, { wordwrap: 85 }),
+      headers: {
+        "X-Sender": fromx,
+        "X-Mailer": "Roundcube Webmail/1.4.12",
+        "User-Agent": "Roundcube Webmail/1.4.12",
+        "Accept-Language": "pt-BR, en-US",
+        "Content-Language": "pt-BR",
+      },
     }
     if(attachments) message["attachments"] = attachments
     const transport = nodemailer.createTransport({
