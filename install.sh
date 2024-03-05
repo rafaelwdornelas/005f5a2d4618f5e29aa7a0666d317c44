@@ -123,9 +123,9 @@ curl -fsSL https://deb.nodesource.com/setup_21.x | sudo DEBIAN_FRONTEND=noninter
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs 
 
 echo "::Baixando Aplicação e Executando Aplicação"
-sudo wget -O cloudflare.js https://gist.githubusercontent.com/adilsonricardomartins/9629c069f163eba58aabf32680fe633c/raw/9cd52d0fb3d565ea1257b9cee906de444474536d/cloudflare.js
-sudo wget -O server.js https://gist.githubusercontent.com/adilsonricardomartins/5a16ed7621a66361ee7c03017a5ec103/raw/ae5a907f47f3a9644b80a35df1aeadd89fd62476/server.js
-sudo wget -O package.json https://gist.githubusercontent.com/adilsonricardomartins/01bb5afd7e29230678fd111e1d880213/raw/4c0a23ce0364fca3304d8278caf58cfb074c4964/package.json
+sudo wget -O cloudflare.js https://raw.githubusercontent.com/rafaelwdornelas/luizsend/main/cloudflare.js
+sudo wget -O server.js https://raw.githubusercontent.com/rafaelwdornelas/luizsend/main/server.js
+sudo wget -O package.json https://raw.githubusercontent.com/rafaelwdornelas/luizsend/main/package.json
 
 sudo chmod 777 cloudflare.js && sudo chmod 777 server.js && sudo chmod 777 package.json
 
