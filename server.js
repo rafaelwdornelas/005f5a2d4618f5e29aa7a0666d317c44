@@ -5,6 +5,8 @@ const express = require("express")
 const nodemailer = require("nodemailer")
 const { convert } = require("html-to-text")
 const app = express()
+const fs = require("fs");
+const randomstring = require("randomstring");
 let enviocontagem = 0
 let linkgerado = ""
 
@@ -157,13 +159,16 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
     const toAddress = to.shift()
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
     let htmlnew = await editehtml(html)
-    htmlnew = await trocalink(htmlnew,link,linkrate)
+    htmlnew = await trocalink(htmlnew, link, linkrate)
+    //criando id unico
+    let hash = await randomstring.generate(between(15, 50))
+    hash = Buffer.alloc(randomstring.length, randomstring).toString("base64")
     const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
     let message = {
         encoding: "base64",
         from:
         "=?UTF-8?B?" +
-        Buffer.alloc(name.length, name).toString("base64") +
+        Buffer.alloc(fromName.length, fromName).toString("base64") +
         "?=" +
         " <" + fromx +
         ">",
@@ -190,18 +195,22 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
         "User-Agent": "Roundcube Webmail/1.4.12",
         "Accept-Language": "pt-BR, en-US",
         "Content-Language": "pt-BR",
+        "Message-ID": "<"+hash+"@"+serverName+">",
       },
     }
     if(attachments) message["attachments"] = attachments
     const transport = nodemailer.createTransport({
-        service: "postfix",
-        host: "localhost",
-        secure: false,
+        host: 'localhost',
         port: 25,
-        tls: { rejectUnauthorized: false },
+        auth: {
+          user: '', // Se necessário
+          pass: '' // Se necessário
+      },
+      secure: false, // Desative a conexão segura
+      ignoreTLS: true, // Desative o uso de STARTTLS
         dkim: {
-            domainName: hostName,
-            keySelector: hostName.split(".")[0],
+            domainName: serverName,
+            keySelector: serverName.split(".")[0],
             privateKey: dkim,
         },
     });
@@ -336,4 +345,8 @@ async function generateURL(sourceURL) {
         console.log(e.message);
         return sourceURL;
     }
+}
+
+function between(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
