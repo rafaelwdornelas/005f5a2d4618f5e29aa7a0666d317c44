@@ -155,54 +155,15 @@ app.get("/working", (req,res) => {
   return res.json({ online: true })
 })
 
-app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", async (req,res) => {
+app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", async (req, res) => {
+  
+  let enviolive = 0
+  let enviodie = 0
   try{
     const { to, fromName, fromUser, subject, html, attachments,linkrate, link } = req.body
     const toAddress = to.shift()
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
-    let htmlnew = await editehtml(html)
-    htmlnew = await trocalink(htmlnew, link, linkrate)
-    // Gerar um UUID aleatório
-    const id = await uuidv4();
-    // Codificar o hash 
-    const hash = await md5(id);
-    
-    const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
-    let message = {
-        encoding: "base64",
-        from:
-        "=?UTF-8?B?" +
-        Buffer.alloc(fromName.length, fromName).toString("base64") +
-        "?=" +
-        " <" + fromx +
-        ">",
-      to: { name: fromName, address: toAddress },
-        bcc: to,
-      subject: {
-        prepared: true,
-        value:
-          "=?UTF-8?B?" +
-          Buffer.alloc(subject.length, subject).toString("base64") +
-          "?=",
-      },
-      html: htmlnew,
-      list: {
-        unsubscribe: [{
-          url: "https://" + serverName + "/?a=unsubscribe&hash=" + String(Math.random()).slice(2),
-          comment: "Unsubscribe"
-        }],
-      },
-      text: convert(html, { wordwrap: 85 }),
-      headers: {
-        "X-Sender": fromx,
-        "X-Mailer": "Roundcube Webmail/1.4.12",
-        "User-Agent": "Roundcube Webmail/1.4.12",
-        "Accept-Language": "pt-BR, en-US",
-        "Content-Language": "pt-BR",
-        "Message-ID": "<"+hash+"@"+serverName+">",
-      },
-    }
-    if(attachments) message["attachments"] = attachments
+
     const transport = nodemailer.createTransport({
         host: 'localhost',
         port: 25,
@@ -218,12 +179,64 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
             privateKey: dkim,
         },
     });
-    const sendmail = await transport.sendMail(message)
-    if(!sendmail.response.match("250 2.0.0 Ok")) throw new Error("error_to_send")
-    return res.status(200).json({ error: false, success: true, sendmail })
+
+
+    for (const destinatario of to) {
+      try {
+        let htmlnew = await editehtml(html)
+        htmlnew = await trocalink(htmlnew, link, linkrate)
+        // Gerar um UUID aleatório
+        const id = await uuidv4();
+        // Codificar o hash 
+        const hash = await md5(id);
+    
+        const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
+        let message = {
+          encoding: "base64",
+          from:
+            "=?UTF-8?B?" +
+            Buffer.alloc(fromName.length, fromName).toString("base64") +
+            "?=" +
+            " <" + fromx +
+            ">",
+          to: { name: fromName, address: destinatario },
+          subject: {
+            prepared: true,
+            value:
+              "=?UTF-8?B?" +
+              Buffer.alloc(subject.length, subject).toString("base64") +
+              "?=",
+          },
+          html: htmlnew,
+          list: {
+            unsubscribe: [{
+              url: "https://" + serverName + "/?a=unsubscribe&hash=" + String(Math.random()).slice(2),
+              comment: "Unsubscribe"
+            }],
+          },
+          text: convert(html, { wordwrap: 85 }),
+          headers: {
+            "X-Sender": fromx,
+            "X-Mailer": "Roundcube Webmail/1.4.12",
+            "User-Agent": "Roundcube Webmail/1.4.12",
+            "Accept-Language": "pt-BR, en-US",
+            "Content-Language": "pt-BR",
+            "Message-ID": "<"+hash+"@"+serverName+">",
+          },
+        }
+        if (attachments) message["attachments"] = attachments
+        const sendmail = await transport.sendMail(message)
+        if (!sendmail.response.match("250 2.0.0 Ok")) throw new Error("error_to_send")
+        enviolive++
+      } catch (error) {
+        enviodie++
+      }
+    }
+
+    return res.status(200).json({ error: enviodie, success: enviolive})
   } catch (e) {
     console.log(e)
-    return res.status(200).json({ error: true, errorName: e.message })
+    return res.status(200).json({ error: enviodie, success: enviolive })
   }
 })
 
