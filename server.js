@@ -6,6 +6,8 @@ const nodemailer = require("nodemailer")
 const { convert } = require("html-to-text")
 const app = express()
 const fs = require("fs");
+const md5 = require('md5');
+const { v4: uuidv4 } = require('uuid');
 const randomstring = require("randomstring");
 let enviocontagem = 0
 let linkgerado = ""
@@ -160,9 +162,11 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
     let htmlnew = await editehtml(html)
     htmlnew = await trocalink(htmlnew, link, linkrate)
-    //criando id unico
-    let hash = await randomstring.generate(between(15, 50))
-    hash = Buffer.alloc(randomstring.length, randomstring).toString("base64")
+    // Gerar um UUID aleatório
+    const id = await uuidv4();
+    // Codificar o hash 
+    const hash = await md5(id);
+    
     const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
     let message = {
         encoding: "base64",
