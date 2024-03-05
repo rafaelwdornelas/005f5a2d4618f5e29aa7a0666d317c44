@@ -217,7 +217,8 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
     const sendmail = await transport.sendMail(message)
     if(!sendmail.response.match("250 2.0.0 Ok")) throw new Error("error_to_send")
     return res.status(200).json({ error: false, success: true, sendmail })
-  }catch(e){
+  } catch (e) {
+    console.log(e)
     return res.status(200).json({ error: true, errorName: e.message })
   }
 })
