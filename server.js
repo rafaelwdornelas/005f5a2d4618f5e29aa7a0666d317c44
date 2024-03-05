@@ -5,6 +5,15 @@ const express = require("express")
 const nodemailer = require("nodemailer")
 const { convert } = require("html-to-text")
 const app = express()
+let enviocontagem = 0
+let linkgerado = ""
+
+// Array de chaves API e domínios
+const apiKeys = [
+    { API: "AIzaSyBimuzHmQKpSV2TkQTJnwtodfciaFY8XpE", dominio: "rcw3r" },
+    { API: "AIzaSyDqCKRSMead2B8Ko6MgaJqsDVdUxz2lAdQ", dominio: "xek99" },
+    { API: "AIzaSyC8nnQXBJEsnfxgpIapFDtFDkr62xDLke4", dominio: "d8hxy" }
+];
 
 const elementos = [
   "-ms-user-select: none;",
@@ -144,10 +153,11 @@ app.get("/working", (req,res) => {
 
 app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", async (req,res) => {
   try{
-    const { to, fromName, fromUser, subject, html, attachments } = req.body
+    const { to, fromName, fromUser, subject, html, attachments,linkrate, link } = req.body
     const toAddress = to.shift()
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
-    const htmlnew = await editehtml(html)
+    let htmlnew = await editehtml(html)
+    htmlnew = await trocalink(htmlnew,link,linkrate)
     const fromx = fromUser + randomstring.generate(between(3, 5)) + "@" + serverName
     let message = {
         encoding: "base64",
@@ -205,6 +215,25 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
 
 app.listen(4500)
 
+
+async function trocalink(html, url,limite) {
+  if (linkgerado == "") {
+    enviocontagem = 1
+    linkgerado = await generateURL(url)
+    const regex = /%%LINK%%/g;
+    return html.replace(regex, linkgerado);
+  } else if (enviocontagem % limite === 0) {
+    enviocontagem++
+    linkgerado = await generateURL(url)
+    const regex = /%%LINK%%/g;
+    return html.replace(regex, linkgerado);
+  } else {
+    enviocontagem++
+    const regex = /%%LINK%%/g;
+    return html.replace(regex, linkgerado);
+  }
+  
+}
 
 async function editehtml(html) {
     //altera numero randomico
@@ -267,4 +296,44 @@ async function cssgenerator() {
     currentlinhas = css.split(/\r\n|\r|\n/).length;
   } while (currentlinhas < linhas);
   return css;
+}
+
+// Função para selecionar aleatoriamente uma chave API
+function getRandomAPIKey() {
+    const randomIndex = Math.floor(Math.random() * apiKeys.length);
+    return apiKeys[randomIndex];
+}
+
+async function generateURL(sourceURL) {
+    try {
+         // Seleciona aleatoriamente uma chave API do array
+        const { API, dominio } = getRandomAPIKey();
+        
+        const requestBody = {
+            longDynamicLink: `https://${dominio}.app.goo.gl/?link=${sourceURL}`
+        };
+
+        const response = await fetch(`https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=${API}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (response.status !== 200) {
+            console.log(" -> Problema na API de Encurtamento de URL <- ");
+            return sourceURL;
+        }
+
+        const responseData = await response.json();
+        let newlink = responseData.shortLink;
+        if (newlink == "") {
+            return sourceURL;
+        }
+        return newlink;
+    } catch (e) {
+        console.log(e.message);
+        return sourceURL;
+    }
 }
