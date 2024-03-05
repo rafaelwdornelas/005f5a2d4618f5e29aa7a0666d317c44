@@ -3,7 +3,7 @@ const { readFileSync } = require("node:fs")
 class Utils {
     getDkimCode(){
         const dkim = readFileSync("./dkim.txt", "utf-8").replace(/(\r\n|\n|\r|\t|"|\)| )/gm, "")
-        return dkim.split(";").find((c) => c.match("p=")).replace("p=","")
+        return dkim
     }
 }
 
