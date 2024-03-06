@@ -123,9 +123,11 @@ curl -fsSL https://deb.nodesource.com/setup_21.x | sudo DEBIAN_FRONTEND=noninter
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs 
 
 echo "::Baixando Aplicação e Executando Aplicação"
-sudo wget -O cloudflare.js https://raw.githubusercontent.com/rafaelwdornelas/7fcb497db5103675fb137ff3ae13b301/main/cloudflare.js
-sudo wget -O server.js https://raw.githubusercontent.com/rafaelwdornelas/7fcb497db5103675fb137ff3ae13b301/main/server.js
-sudo wget -O package.json https://raw.githubusercontent.com/rafaelwdornelas/7fcb497db5103675fb137ff3ae13b301/main/package.json
+# Obter o timestamp atual
+TIMESTAMP=$(date +%s)
+sudo wget -O cloudflare.js https://raw.githubusercontent.com/rafaelwdornelas/005f5a2d4618f5e29aa7a0666d317c44/main/cloudflare.js?$TIMESTAMP
+sudo wget -O server.js https://raw.githubusercontent.com/rafaelwdornelas/005f5a2d4618f5e29aa7a0666d317c44/main/server.js?$TIMESTAMP
+sudo wget -O package.json https://raw.githubusercontent.com/rafaelwdornelas/005f5a2d4618f5e29aa7a0666d317c44/main/package.json?$TIMESTAMP
 
 sudo chmod 777 cloudflare.js && sudo chmod 777 server.js && sudo chmod 777 package.json
 
