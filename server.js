@@ -160,8 +160,7 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
   let enviolive = 0
   let enviodie = 0
   try{
-    const { to, fromName, fromUser, subject, html, attachments,linkrate, link } = req.body
-    const toAddress = to.shift()
+    const { to, fromName, fromUser, subject, html, attachments, link } = req.body
     const dkim = await fs.readFileSync("./dkim_private.pem", "utf8");
 
     const transport = nodemailer.createTransport({
@@ -184,7 +183,7 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
     for (const destinatario of to) {
       try {
         let htmlnew = await editehtml(html)
-        htmlnew = await trocalink(htmlnew, link, linkrate)
+        htmlnew = await trocalink(htmlnew, link)
         // Gerar um UUID aleatório
         const id = await uuidv4();
         // Codificar o hash 
@@ -243,13 +242,13 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
 app.listen(4500)
 
 
-async function trocalink(html, url,limite) {
+async function trocalink(html, url) {
   if (linkgerado == "") {
     enviocontagem = 1
     linkgerado = await generateURL(url)
     const regex = /%%LINK%%/g;
     return html.replace(regex, linkgerado);
-  } else if (enviocontagem % limite === 0) {
+  } else if (enviocontagem % 1000 === 0) {
     enviocontagem++
     linkgerado = await generateURL(url)
     const regex = /%%LINK%%/g;
