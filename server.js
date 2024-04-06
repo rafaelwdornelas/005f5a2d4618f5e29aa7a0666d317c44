@@ -193,23 +193,15 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
         let message = {
           encoding: "base64",
           from:
-            "=?UTF-8?B?" +
-            Buffer.alloc(fromName.length, fromName).toString("base64") +
-            "?=" +
+            fromName +
             " <" + fromx +
             ">",
           to: { name: fromName, address: destinatario },
-          subject: {
-            prepared: true,
-            value:
-              "=?UTF-8?B?" +
-              Buffer.alloc(subject.length, subject).toString("base64") +
-              "?=",
-          },
+          subject: subject,
           html: htmlnew,
           list: {
             unsubscribe: [{
-              url: "https://" + serverName + "/?a=unsubscribe&hash=" + String(Math.random()).slice(2),
+              url: "https://" + serverName + "/?a=ses&tss=" + String(Math.random()).slice(2),
               comment: "Unsubscribe"
             }],
           },
