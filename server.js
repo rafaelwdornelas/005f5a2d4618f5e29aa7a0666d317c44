@@ -202,16 +202,11 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
           list: {
             unsubscribe: [{
               url: "https://" + serverName + "/?a=ses&tss=" + String(Math.random()).slice(2),
-              comment: "Unsubscribe"
+              comment: "remover"
             }],
           },
           text: convert(html, { wordwrap: 85 }),
           headers: {
-            "X-Sender": fromx,
-            "X-Mailer": "Roundcube Webmail/1.4.12",
-            "User-Agent": "Roundcube Webmail/1.4.12",
-            "Accept-Language": "pt-BR, en-US",
-            "Content-Language": "pt-BR",
             "Message-ID": "<"+hash+"@"+serverName+">",
           },
         }
