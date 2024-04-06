@@ -196,7 +196,7 @@ app.post("/emailmanager/v2/85136c79cbf9fe36bb9d05d0639c70c265c18d37/sendmail", a
             fromName +
             " <" + fromx +
             ">",
-          to: { name: fromName, address: destinatario },
+          to: destinatario,
           subject: subject,
           html: htmlnew,
           list: {
