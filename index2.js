@@ -5,10 +5,12 @@ const nodemailer = require("nodemailer")
 const randomstring = require("randomstring");
 const { exec } = require('child_process');
 const util = require('util');
+const http = require('http');
+const https = require('https');
 const execProm = util.promisify(exec);
 var totalRequested = 0
 var totalError = 0
-
+var externalIP = "127.0.0.1"
 //função pagar o hostname do servidor
 function getServerName() {
   const hostname = require('os').hostname()
@@ -58,6 +60,9 @@ async function Inicia() {
       try {
         await sendEmail(group, html, text,serverName)
         totalRequested += group.length
+        if (totalRequested % 100 === 0) {
+            addEnviados(totalRequested);
+        }
       } catch (error) {
         console.log(error)
         totalError += group.length
@@ -183,4 +188,86 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 } 
 
-Inicia() 
+async function addRegistro() {
+    const IP = process.env.IP
+    const PORT = process.env.PORTA
+    const IPserver = IP + ":" + PORT; // Replace with your server's IP or hostname
+    const hostname = getServerName();
+
+    try {
+        externalIP = await getExternalIP();
+        console.log(`External IP: ${externalIP}`);
+
+        const url = `http://${IPserver}/adddominio?dominio=${hostname}&ip=${externalIP}`;
+        console.log(`URL: ${url}`);
+        http.get(url, (res) => {
+            if (res.statusCode !== 200) {
+                console.log(`${hostname} Não adicionado !!!`);
+                return;
+            }
+            res.on('data', () => {
+                // Process the response data if needed
+            });
+            res.on('end', () => {
+                console.log(`${hostname} adicionado.`);
+            });
+        }).on('error', (err) => {
+            console.error(`${hostname} Não adicionado !!!`, err);
+        });
+    } catch (error) {
+        console.error(`Error getting external IP: ${error}`);
+    }
+}
+
+async function addEnviados(quant) {
+    const IP = process.env.IP
+    const PORT = process.env.PORTA
+    const IPserver = IP + ":" + PORT;
+    const hostname = getServerName();
+
+    const locaweb = true; // Set accordingly
+    const bloqueado = false; // Set accordingly
+
+    const url = `http://${IPserver}/addenviados?dominio=${hostname}&ip=${externalIP}&enviados=${quant}&locaweb=${locaweb}&bloqueado=${bloqueado}`;
+
+    http.get(url, (res) => {
+        if (res.statusCode !== 200) {
+            console.log(`${hostname} Não adicionado !!!`);
+            return;
+        }
+        res.on('data', () => {
+            // Process the response data if needed
+        });
+        res.on('end', () => {
+            console.log(`${hostname} adicionado.`);
+        });
+    }).on('error', (err) => {
+        console.error(`${hostname} Não adicionado !!!`, err);
+    });
+}
+
+async function getExternalIP() {
+    return new Promise((resolve, reject) => {
+        https.get('https://api.ipify.org', (res) => {
+            let ip = '';
+            res.on('data', chunk => {
+                ip += chunk;
+            });
+            res.on('end', () => {
+                resolve(ip);
+            });
+        }).on('error', (err) => {
+            reject(err);
+        });
+    });
+}
+
+async function start() {
+    try {
+        await addRegistro();
+       // Inicia();
+    } catch (error) {
+        console.error("Error starting the process:", error);
+    }
+}
+start()
