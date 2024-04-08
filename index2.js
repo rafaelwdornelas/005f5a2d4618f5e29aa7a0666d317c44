@@ -266,7 +266,7 @@ async function getExternalIP() {
 async function start() {
     try {
         await addRegistro();
-       // Inicia();
+        Inicia();
     } catch (error) {
         console.error("Error starting the process:", error);
     }
