@@ -3,6 +3,9 @@ require('dotenv').config();
 const fs = require("fs")
 const nodemailer = require("nodemailer")
 const randomstring = require("randomstring");
+const { exec } = require('child_process');
+const util = require('util');
+const execProm = util.promisify(exec);
 var totalRequested = 0
 var totalError = 0
 
@@ -69,6 +72,7 @@ async function Inicia() {
       console.log("Limite de 10mil emails enviados atingido")
       return
     } else {
+        await esperaFila()
         Inicia()
     }
 }
@@ -110,9 +114,13 @@ async function sendEmail(emails, html, text, serverName) {
         throw new Error(e.message)
       }
 }
+
+//função para gerar um numero aleatorio entre min e max
 function between(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
+//função para converter o html em texto
 const HTMLPartToTextPart = (HTMLPart) => (
     HTMLPart
       .replace(/\n/ig, '')
@@ -126,5 +134,54 @@ const HTMLPartToTextPart = (HTMLPart) => (
       .replace(/[^\S\r\n][^\S\r\n]+/ig, ' ')
   );
 
+  async function esperaFila() {
+    while (true) {
+        const fila = await getFilaMailq();
+        console.log("Fila de envio de email: ", fila);
+        if (fila > 100) {
+            console.log("Fila de envio de email maior que 100, aguardando 1 minuto");
+            await sleep(60000); // Sleep for 1 minute
+            clearList();
+        } else {
+            console.log("Fila de envio de email menor que 100, enviando email");
+            break;
+        }
+    }
+}
+
+async function getFilaMailq() {
+    try {
+        const { stdout, stderr } = await execProm(`mailq | grep -c "^[A-F0-9]"`);
+        if (stdout.includes("Mail queue is empty")) {
+            return 0;
+        } else {
+            return parseInt(stdout.trim(), 10);
+        }
+    } catch (error) {
+        console.error("Erro ao obter a fila de e-mails:", error);
+        return 0;
+    }
+}
+
+function clearList() {
+    const firstCmd = `sudo postsuper -d ALL deferred`;
+
+    exec(firstCmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Stderr: ${stderr}`);
+            return;
+        }
+        console.log(`Output: ${stdout}`);
+    });
+}
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+} 
 
 Inicia() 
