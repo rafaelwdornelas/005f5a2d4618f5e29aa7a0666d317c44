@@ -316,9 +316,6 @@ function verificaLog() {
     const firstCmd = "tail -f /var/log/syslog | grep status=";
     const cmd = spawn("bash", ["-c", firstCmd]);
 
-    let locaweb = false;
-    let bloqueado = false;
-
     cmd.stdout.on('data', (data) => {
         const retorno = data.toString();
         const retornoarr = retorno.split("\n");
