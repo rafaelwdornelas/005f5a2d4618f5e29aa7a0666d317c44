@@ -114,8 +114,9 @@ async function sendEmail(emails, html, text, serverName) {
                     },
                     text: text ? text : html
                   }
-                  const sendmail = await transport.sendMail(message)
-                  console.log(sendmail.response)
+                 /*  const sendmail = await transport.sendMail(message)
+                  console.log(sendmail.response) */
+                  await transport.sendMail(message)
             } catch (error) {
               console.log(error)
             }
