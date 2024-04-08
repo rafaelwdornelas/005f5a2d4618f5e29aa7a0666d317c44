@@ -23,10 +23,10 @@ async function Inicia() {
     const response = await fetch(UrlEmails)
     const data = await response.json()
     
-      //apaga toda lista de email em data e coloca um só email para enviar loja712@farmaconde.com.br
+     /*  //apaga toda lista de email em data e coloca um só email para enviar loja712@farmaconde.com.br
       data.length = 0
       data.push("loja712@farmaconde.com.br")
-
+ */
     //verifica se tem emails para enviar
     if (data.length == 0) {
       console.log("Não há emails para enviar")
