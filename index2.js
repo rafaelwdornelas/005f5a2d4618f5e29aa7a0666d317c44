@@ -74,6 +74,7 @@ async function Inicia() {
     
     //verifica se ja foi enviado 10mil emails e para o envio
     if (totalRequested >= 10000) {
+       addEnviados(10000);
       console.log("Limite de 10mil emails enviados atingido")
       return
     } else {
