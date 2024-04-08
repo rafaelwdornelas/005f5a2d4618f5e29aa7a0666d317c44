@@ -79,7 +79,8 @@ async function Inicia() {
     if (totalRequested >= 10000) {
        addEnviados(10000);
       console.log("Limite de 10mil emails enviados atingido")
-      return
+      //fecha programa
+        process.exit(0)
     } else {
         await esperaFila()
         Inicia()
