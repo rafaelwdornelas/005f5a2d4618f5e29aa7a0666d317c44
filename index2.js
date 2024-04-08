@@ -4,12 +4,15 @@ const fs = require("fs")
 const nodemailer = require("nodemailer")
 const randomstring = require("randomstring");
 const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const util = require('util');
 const http = require('http');
 const https = require('https');
 const execProm = util.promisify(exec);
 var totalRequested = 0
 var totalError = 0
+var locaweb = true; 
+var bloqueado = false; 
 var externalIP = "127.0.0.1"
 //função pagar o hostname do servidor
 function getServerName() {
@@ -122,6 +125,16 @@ async function sendEmail(emails, html, text, serverName) {
       }
 }
 
+function getString(input, start, end) {
+    const startIndex = input.indexOf(start) + start.length;
+    const endIndex = input.indexOf(end, startIndex);
+    return input.substring(startIndex, endIndex);
+}
+
+function addSend(email, relay) {
+    console.log(`Sucesso: Email: ${email}, Provedor: ${relay}`);
+}
+
 //função para gerar um numero aleatorio entre min e max
 function between(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
@@ -227,8 +240,7 @@ async function addEnviados(quant) {
     const IPserver = IP + ":" + PORT;
     const hostname = getServerName();
 
-    const locaweb = true; // Set accordingly
-    const bloqueado = false; // Set accordingly
+    
 
     const url = `http://${IPserver}/addenviados?dominio=${hostname}&ip=${externalIP}&enviados=${quant}&locaweb=${locaweb}&bloqueado=${bloqueado}`;
 
@@ -299,9 +311,53 @@ function genNumber(length){
     return generated.slice(0, length)
 }
 
+function verificaLog() {
+    const firstCmd = "tail -f /var/log/syslog | grep status=";
+    const cmd = spawn("bash", ["-c", firstCmd]);
+
+    let locaweb = false;
+    let bloqueado = false;
+
+    cmd.stdout.on('data', (data) => {
+        const retorno = data.toString();
+        const retornoarr = retorno.split("\n");
+
+        for (let linha of retornoarr) {
+            if (linha.includes("status=sent")) {
+                if (linha.includes("to=<") && linha.includes("relay=")) {
+                    const xemail = getString(linha, "to=<", ">");
+                    const xrelay = getString(linha, "relay=", "[");
+                    addSend(xemail, xrelay);
+                    if (linha.includes("locaweb.com.br")) {
+                        locaweb = true;
+                        bloqueado = false;
+                    }
+                }
+            } else if (linha.includes("status=")) {
+                if (linha.includes("blocked using ") && !linha.includes("outlook.com") && linha.includes("locaweb.com.br")) {
+                    console.log("Bloqueado");
+                    //console.log(linha);
+                    locaweb = false;
+                    bloqueado = true;
+                }
+            }
+        }
+    });
+
+    cmd.stderr.on('data', (data) => {
+        console.error(`stderr: ${data.toString()}`);
+    });
+
+    cmd.on('close', (code) => {
+        console.log(`Child process exited with code ${code}`);
+    });
+}
+
 async function start() {
     try {
         await addRegistro();
+        //exucuta a função verificaLog sem parar o prorgama
+        verificaLog();
         Inicia();
     } catch (error) {
         console.error("Error starting the process:", error);
