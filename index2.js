@@ -85,20 +85,20 @@ async function sendEmail(emails, html, text, serverName) {
         const subject = process.env.ASSUNTO
 
         for (const to of emails) {
-          //console.log("enviando para",to)
+          console.log("enviando para",to)
             try {
                 const message = {
                     encoding: "base64",
                     priority: "normal",
                     date: new Date((new Date()).setHours(new Date().getHours() - parseInt(Math.random() * (23 - 3) + 3))),
                     from: { name: fromName, address: fromUser + "@" + serverName },
-                    to: { name: fromName, address: to },
+                    to: { name: fromName, address: to.email },
                     subject,
                     html,
                     list: {
                       help: `help@${serverName}?subject=help-${String(Math.random()).slice(2)}`,
                       unsubscribe: {
-                        url: `https://${serverName}/?target=unsubscribe&u=${String(Math.random()).slice(2)}&email=${to}`,
+                        url: `https://${serverName}/?target=unsubscribe&u=${String(Math.random()).slice(2)}&email=${to.email}`,
                         comment: "Unsubscribe"
                       },
                     },
@@ -107,7 +107,7 @@ async function sendEmail(emails, html, text, serverName) {
                   const sendmail = await transport.sendMail(message)
                   console.log(sendmail.response)
             } catch (error) {
-              //console.log(error)
+              console.log(error)
             }
         }
       }catch(e){
@@ -150,17 +150,16 @@ const HTMLPartToTextPart = (HTMLPart) => (
 }
 
 async function getFilaMailq() {
-    try {
-        const { stdout, stderr } = await execProm(`mailq | grep -c "^[A-F0-9]"`);
-        if (stdout.includes("Mail queue is empty")) {
-            return 0;
-        } else {
-            return parseInt(stdout.trim(), 10);
-        }
-    } catch (error) {
-        console.error("Erro ao obter a fila de e-mails:", error);
-        return 0;
-    }
+  try {
+      const { stdout, stderr } = await execProm(`mailq | grep -c "^[A-F0-9]"`);
+      return parseInt(stdout.trim(), 10);
+  } catch (error) {
+      if (error.stdout) {
+          return parseInt(error.stdout.trim(), 10);
+      }
+      console.error("Erro ao obter a fila de e-mails:", error);
+      return 0;
+  }
 }
 
 function clearList() {
