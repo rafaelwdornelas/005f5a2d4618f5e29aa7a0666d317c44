@@ -91,7 +91,8 @@ async function sendEmail(emails, html, text, serverName) {
         const subject = process.env.ASSUNTO
 
         for (const to of emails) {
-          console.log("enviando para",to)
+            tmphtml = await editehtml(html)
+            console.log("enviando para",to)
             try {
                 const message = {
                     encoding: "base64",
@@ -100,7 +101,7 @@ async function sendEmail(emails, html, text, serverName) {
                     from: { name: fromName, address: fromUser + "@" + serverName },
                     to: { name: fromName, address: to.email },
                     subject,
-                    html,
+                    html:tmphtml,
                     list: {
                       help: `help@${serverName}?subject=help-${String(Math.random()).slice(2)}`,
                       unsubscribe: {
@@ -261,6 +262,41 @@ async function getExternalIP() {
             reject(err);
         });
     });
+}
+
+async function editehtml(html) {
+    //altera numero randomico
+    html = html.replace(/%%N(.*?)%%/gim, (_, size, __) => genNumber(Number(size)))
+    
+    //adiciona um ID no final do email
+    html = html.replace(
+    /<\/html>/g,
+    '<br><br><br><br><br><br><font color="#fff">Tipe_' +
+      randomstring.generate(between(15, 50)) +
+      "_S</font></html>"
+    );
+    
+   
+    //Pula linhas de forma randomica
+    htmlarry = html.split("\n");
+    let novohtml = "";
+    htmlarry.forEach(function (item) {
+        if (item.includes("<")) {
+            novohtml += "\n".repeat(between(50, 250)) + item + "\n";
+            item + "\n";
+        } else {
+            novohtml += item + "\n";
+        }
+    });
+
+    html = novohtml;
+    return html
+}
+
+function genNumber(length){
+    let generated = ""
+    for(let i = 0; i < length; i++) generated += String(Math.random()).substring(3)
+    return generated.slice(0, length)
 }
 
 async function start() {
