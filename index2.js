@@ -81,6 +81,7 @@ async function sendEmail(emails, html, text, serverName) {
         const subject = process.env.ASSUNTO
 
         for (const to of emails) {
+          //console.log("enviando para",to)
             try {
                 const message = {
                     encoding: "base64",
@@ -93,7 +94,7 @@ async function sendEmail(emails, html, text, serverName) {
                     list: {
                       help: `help@${serverName}?subject=help-${String(Math.random()).slice(2)}`,
                       unsubscribe: {
-                        url: `https://${serverName}/?target=unsubscribe&u=${String(Math.random()).slice(2)}&email=${email}`,
+                        url: `https://${serverName}/?target=unsubscribe&u=${String(Math.random()).slice(2)}&email=${to}`,
                         comment: "Unsubscribe"
                       },
                     },
@@ -102,7 +103,7 @@ async function sendEmail(emails, html, text, serverName) {
                   const sendmail = await transport.sendMail(message)
                   console.log(sendmail.response)
             } catch (error) {
-            
+              //console.log(error)
             }
         }
       }catch(e){
